@@ -1,6 +1,8 @@
-#### joe made this: http://goel.io/joe
 
-#### node ####
+# Created by https://www.gitignore.io/api/node,react,vim,windows
+# Edit at https://www.gitignore.io/?templates=node,react,vim,windows
+
+### Node ###
 # Logs
 logs
 *.log
@@ -23,6 +25,7 @@ lib-cov
 
 # Coverage directory used by tools like istanbul
 coverage
+*.lcov
 
 # nyc test coverage
 .nyc_output
@@ -45,6 +48,9 @@ jspm_packages/
 
 # TypeScript v1 declaration files
 typings/
+
+# TypeScript cache
+*.tsbuildinfo
 
 # Optional npm cache directory
 .npm
@@ -74,6 +80,9 @@ typings/
 # nuxt.js build output
 .nuxt
 
+# react / gatsby 
+public/
+
 # vuepress build output
 .vuepress/dist
 
@@ -86,8 +95,21 @@ typings/
 # DynamoDB Local files
 .dynamodb/
 
+### react ###
+.DS_*
+**/*.backup.*
+**/*.back.*
 
-#### vim ####
+node_modules
+bower_componets
+
+*.sublime*
+
+psd
+thumb
+sketch
+
+### Vim ###
 # Swap
 [._]*.s[a-v][a-z]
 [._]*.sw[a-p]
@@ -97,6 +119,7 @@ typings/
 
 # Session
 Session.vim
+Sessionx.vim
 
 # Temporary
 .netrwhist
@@ -106,10 +129,10 @@ tags
 # Persistent undo
 [._]*.un~
 
-
-#### windows ####
+### Windows ###
 # Windows thumbnail cache files
 Thumbs.db
+Thumbs.db:encryptable
 ehthumbs.db
 ehthumbs_vista.db
 
@@ -132,18 +155,5 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-
-#### linux ####
-*~
-
-# temporary files which can be created if a process still has a handle open of a deleted file
-.fuse_hidden*
-
-# KDE directory preferences
-.directory
-
-# Linux trash folder which might appear on any partition or disk
-.Trash-*
-
-# .nfs files are created when an open file is removed but is still being accessed
-.nfs*
+# End of https://www.gitignore.io/api/node,react,vim,windows
+n
