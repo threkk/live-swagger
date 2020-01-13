@@ -69,8 +69,20 @@ function createWatcherServer(target: string): Application {
 
   // API.
   app.get('/api', (_, res) => {
-    // TODO check if YAML, JSON and valid.
-    res.sendFile(resolve(join(__dirname, target)))
+    const filePath = resolve(join(__dirname, target))
+    const content = readFileSync(filePath, 'utf-8')
+
+    try {
+      JSON.parse(content.trim())
+    } catch {
+      try {
+        safeLoad(content, { json: true, schema: FAILSAFE_SCHEMA })
+      } catch {
+        res.status(400).send({ error: true, message: MSG_ERROR })
+      }
+    }
+
+    res.sendFile(filePath)
   })
 
   // Client side routing.
