@@ -4,14 +4,17 @@ import { watch, FSWatcher, readFileSync } from 'fs'
 import { Application } from 'express'
 import { safeLoad, FAILSAFE_SCHEMA } from 'js-yaml'
 import { EOL } from 'os'
+import { debug } from 'debug'
 
 // Constants
 const EVT_RENAME = 'rename'
 const EVT_CHANGE = 'change'
 const EVT_UPDATE = 'update'
-const MSG_ERROR = 'invalid_file'
+const EVT_INVALID = 'invalid_file'
 
 // Helper functions
+const log = debug('live-swagger')
+
 const evtId = (_: any, id: number): string => `id: ${id}${EOL}`
 const evtType = (_: any, type: string): string => `event: ${type}${EOL}`
 const evtData = (_: any, data: string): string => `data: ${data}${EOL}`
@@ -19,7 +22,9 @@ const evtData = (_: any, data: string): string => `data: ${data}${EOL}`
 // Application
 function createWatcherServer(target: string): Application {
   const app = express()
-  app.use(express.static(join(__dirname, 'client', 'build')))
+  const frontend = join(__dirname, 'client', 'build')
+  log(`Loading frontend from ${frontend}.`)
+  app.use(express.static(frontend))
 
   let watcher: FSWatcher | null = null
 
@@ -28,33 +33,40 @@ function createWatcherServer(target: string): Application {
     let evtCounter: number = 0
     watcher = watch(target, (event, filename) => {
       evtCounter++
-      // TODO: Add some debugging console.log(counter, event, filename)
+      log(
+        `Watcher triggered - counter:${evtCounter}, event:${event}, filename:${filename}`
+      )
+
       if (event === EVT_RENAME) {
+        log(`New file name: ${filename}`)
         // TODO: Fill. Add also event for moving files.
-        console.log(`New file name: ${filename}`)
       } else if (event === EVT_CHANGE) {
         // TODO: This should use the filename, not a workaround.
         const content = readFileSync(target, 'utf-8')
 
+        log('Change event detected, sending new version to client.')
         res.write(evtId`${evtCounter}`)
         res.write(evtType`${EVT_UPDATE}`)
         try {
           const output = JSON.stringify(JSON.parse(content)).trim()
+          log('Detected JSON format.')
           res.write(evtData`${output}`)
         } catch {
           try {
             const output = JSON.stringify(
               safeLoad(content, { json: true, schema: FAILSAFE_SCHEMA })
             ).trim()
+            log('Detected YAML format.')
             res.write(evtData`${output}`)
           } catch {
-            res.write(evtData`${MSG_ERROR}`)
+            log('Invalid format detected.')
+            res.write(evtData`${EVT_INVALID}`)
           }
         }
 
         res.write(EOL)
       } else {
-        console.log('weird flex but ok')
+        log('Other type of event detected. Reload not triggered.')
       }
     })
 
@@ -74,11 +86,14 @@ function createWatcherServer(target: string): Application {
 
     try {
       JSON.parse(content.trim())
+      log('JSON format detected.')
     } catch {
       try {
         safeLoad(content, { json: true, schema: FAILSAFE_SCHEMA })
+        log('YAML format detected.')
       } catch {
-        res.status(400).send({ error: true, message: MSG_ERROR })
+        log('Invalid file format detected.')
+        res.status(400).send({ error: true, message: EVT_INVALID })
       }
     }
 
@@ -86,11 +101,13 @@ function createWatcherServer(target: string): Application {
   })
 
   // Client side routing.
-  app.get('/*', (_, res) => {
+  app.get('/*', (req, res) => {
+    log(`GET ${req.url} Resolving to client.`)
     res.sendFile(resolve(join(__dirname, 'client', 'build', 'index.html')))
   })
 
   const shutdown = () => {
+    log('Shutting down...')
     if (watcher != null) {
       watcher.close()
     }
@@ -104,4 +121,5 @@ function createWatcherServer(target: string): Application {
 }
 
 // TODO: This should go in a CLI.
+log('Running on port 9000')
 createWatcherServer('./examples/swagger.json').listen(9000)
