@@ -1,5 +1,5 @@
 import express = require('express')
-import { join, resolve } from 'path'
+import { join, resolve, basename } from 'path'
 import { watch, FSWatcher, readFileSync } from 'fs'
 import { Application } from 'express'
 import { safeLoad, FAILSAFE_SCHEMA } from 'js-yaml'
@@ -7,7 +7,7 @@ import { EOL } from 'os'
 import { debug } from 'debug'
 
 // Constants
-const EVT_RENAME = 'rename'
+const EVT_CLOSE = 'close'
 const EVT_CHANGE = 'change'
 const EVT_UPDATE = 'update'
 const EVT_INVALID = 'invalid_file'
@@ -20,31 +20,36 @@ const evtType = (_: any, type: string): string => `event: ${type}${EOL}`
 const evtData = (_: any, data: string): string => `data: ${data}${EOL}`
 
 // Application
-function createWatcherServer(target: string): Application {
+export function createWatcherServer(target: string): Application {
   const app = express()
-  const frontend = join(__dirname, 'client', 'build')
+  const frontend = resolve(join(__dirname, 'client', 'build'))
   log(`Loading frontend from ${frontend}.`)
   app.use(express.static(frontend))
 
-  let watcher: FSWatcher | null = null
-
+  const watcher: FSWatcher = watch(target, { encoding: 'utf-8' })
+  watcher.on(EVT_CLOSE, () => watcher.removeAllListeners())
   // Events.
   app.get('/events', (_, res) => {
     let evtCounter: number = 0
-    watcher = watch(target, (event, filename) => {
-      evtCounter++
-      log(
-        `Watcher triggered - counter:${evtCounter}, event:${event}, filename:${filename}`
-      )
 
-      if (event === EVT_RENAME) {
-        log(`New file name: ${filename}`)
-        // TODO: Fill. Add also event for moving files.
-      } else if (event === EVT_CHANGE) {
-        // TODO: This should use the filename, not a workaround.
+    // Note: although the use the same keyword, they are different "change".
+    watcher.addListener(EVT_CHANGE, (event: string, filename: string) => {
+      if (event !== EVT_CHANGE) {
+        // The other possible event is rename, whic is normally triggered when
+        // a new file appears or disappers from a directory. Because we are
+        // watching a file, this should never happen. We log it, but do nothing.
+        log(`${event} on ${target} => no-op`)
+      } else if (basename(target) !== filename) {
+        // This should never happen because we are watching on a folder, so it
+        // should always trigger on the file. However, the watcher
+        // implementation is flaky, so to avoid errors we specifically do
+        // nothing.
+        log(`${event} on ${filename} => no-op`)
+      } else {
+        evtCounter++
         const content = readFileSync(target, 'utf-8')
 
-        log('Change event detected, sending new version to client.')
+        log(`${event} on ${target} => send to client.`)
         res.write(evtId`${evtCounter}`)
         res.write(evtType`${EVT_UPDATE}`)
         try {
@@ -65,8 +70,6 @@ function createWatcherServer(target: string): Application {
         }
 
         res.write(EOL)
-      } else {
-        log('Other type of event detected. Reload not triggered.')
       }
     })
 
@@ -109,17 +112,13 @@ function createWatcherServer(target: string): Application {
   const shutdown = () => {
     log('Shutting down...')
     if (watcher != null) {
+      watcher.removeAllListeners()
       watcher.close()
     }
   }
 
-  // TODO: on ENOENT, ECONNREF
-  app.on('SIGTERM', shutdown)
-  app.on('SIGINT', shutdown)
+  process.on('SIGTERM', shutdown)
+  process.on('SIGINT', shutdown)
 
   return app
 }
-
-// TODO: This should go in a CLI.
-log('Running on port 9000')
-createWatcherServer('./examples/swagger.json').listen(9000)
