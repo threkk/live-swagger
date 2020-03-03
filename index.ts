@@ -1,3 +1,4 @@
+#! /usr/bin/env node
 import { Command } from 'commander'
 import { isAbsolute, resolve, join } from 'path'
 import { existsSync, lstatSync } from 'fs'
