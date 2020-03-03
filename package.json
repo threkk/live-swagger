@@ -1,6 +1,6 @@
 {
   "name": "live-swagger",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Live reloader for Swagger files.",
   "bin": {
     "live-swagger": "./index.js"
