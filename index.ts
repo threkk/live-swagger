@@ -44,10 +44,10 @@ const program = new Command()
 program
   .version(pkg.version)
   .description(pkg.description)
-  .option('-w, --watch', 'Enables watching the file.')
-  .option('-d, --debug', 'Enables debug messages.')
-  .option('-p, --port <port>', 'Port to execute live-swagger', intOption, 9000)
-  .option('-f, --file <file>', 'Path to the input file.', fileOption)
+  .option('-w, --watch', 'enables watching the file.')
+  .option('-d, --debug', 'enables debug messages.')
+  .option('-p, --port <port>', 'port to execute live-swagger', intOption, 9000)
+  .option('-f, --file <file>', 'path to the input file.', fileOption)
 
 try {
   program.parse(process.argv)
