@@ -13,12 +13,17 @@ export default function App(props: AppProps): JSX.Element {
     fetch(props.apiEndpoint)
       .then(res => res.json())
       .then(json => setApi(json))
-      .catch(_ => setApi(null))
+      .catch(err =>
+        console.error(`Error processing the response: ${err.message}`)
+      )
 
     const listener = (evt: any) => {
-      // TODO: This needs a try catch.
-      const json = JSON.parse(evt.data)
-      setApi(json)
+      try {
+        const json = JSON.parse(evt.data)
+        setApi(json)
+      } catch (err) {
+        console.error(`Invalid JSON received: ${err.message}`)
+      }
     }
 
     const eventSource = new EventSource(props.eventEndpoint)
@@ -28,10 +33,8 @@ export default function App(props: AppProps): JSX.Element {
     }
   }, [props.apiEndpoint, props.eventEndpoint])
 
-  // TODO: Improve the error message.
-  let output = <div>It is not a valid JSON</div>
   if (api) {
-    output = (
+    return (
       <RedocStandalone
         spec={api}
         options={{
@@ -43,5 +46,10 @@ export default function App(props: AppProps): JSX.Element {
       />
     )
   }
-  return output
+
+  return (
+    <>
+      <h1>Loading...</h1>
+    </>
+  )
 }
