@@ -105,12 +105,13 @@ export function createApp(target: string, withWatcher: boolean): Application {
   app.get('/api', (_, res) => {
     const content = readFileSync(target, 'utf-8')
 
+    let body = null
     try {
-      JSON.parse(content.trim())
+      body = JSON.parse(content.trim())
       log('JSON format detected.')
     } catch {
       try {
-        safeLoad(content, { json: true, schema: FAILSAFE_SCHEMA })
+        body = safeLoad(content, { json: true, schema: FAILSAFE_SCHEMA })
         log('YAML format detected.')
       } catch {
         log('Invalid file format detected.')
@@ -118,7 +119,7 @@ export function createApp(target: string, withWatcher: boolean): Application {
       }
     }
 
-    res.sendFile(target)
+    res.status(200).send(body)
   })
 
   // Client side routing.
