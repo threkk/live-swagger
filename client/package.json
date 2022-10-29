@@ -3,18 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@types/jest": "^24.0.22",
-    "@types/node": "^12.12.7",
-    "@types/react": "^16.9.11",
-    "@types/react-dom": "^16.9.4",
-    "@types/styled-components": "^4.4.0",
     "mobx": "^4.15.0",
     "react": "^16.11.0",
     "react-dom": "^16.11.0",
     "react-scripts": "3.3.0",
     "redoc": "^2.0.0-rc.18",
     "styled-components": "^4.4.1",
-    "typescript": "^3.7.2"
+    "swagger-ui-react": "^3.28.0"
+  },
+  "devDependencies": {
+    "typescript": "^3.7.2",
+    "@types/jest": "^24.0.22",
+    "@types/node": "^12.12.7",
+    "@types/react": "^16.9.11",
+    "@types/react-dom": "^16.9.4",
+    "@types/styled-components": "^4.4.0"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -27,11 +30,7 @@
     "extends": "react-app"
   },
   "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
+    "production": [">0.2%", "not dead", "not op_mini all"],
     "development": [
       "last 1 chrome version",
       "last 1 firefox version",

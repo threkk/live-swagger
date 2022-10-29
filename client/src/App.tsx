@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { RedocStandalone } from 'redoc'
+import 'swagger-ui-react/swagger-ui.css'
+import SwaggerUI from 'swagger-ui-react'
+
+type Style = 'swagger-ui' | 'redoc'
 
 interface AppProps {
   apiEndpoint: string
   eventEndpoint: string
+  style: Style
 }
 
 export default function App(props: AppProps): JSX.Element {
